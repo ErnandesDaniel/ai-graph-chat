@@ -1,46 +1,28 @@
 {
   "name": "ai-graph-chat",
-  "version": "1.0.0",
-  "description": "AI Chat Graph is an application that allows users to communicate with AI through a chat interface. Each chat session is saved as a directed acyclic graph (DAG), where each node represents a message (either from the user or the AI), and edges represent possible dialog branches. Users can navigate through the graph, create new branches from any node, and compare alternative dialog scenarios.",
-  "main": "index.js",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "format": "prettier --write .",
-    "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "lint": "eslint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ErnandesDaniel/ai-graph-chat.git"
-  },
-  "author": "Your Name <your.email@example.com>",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ErnandesDaniel/ai-graph-chat/issues"
-  },
-  "homepage": "https://github.com/ErnandesDaniel/ai-graph-chat#readme",
   "dependencies": {
-    "next": "^14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "zustand": "^4.0.0",
-    "antd": "^5.0.0",
-    "react-flow-renderer": "^12.0.0",
-    "@trpc/server": "^10.0.0",
-    "@trpc/client": "^10.0.0",
-    "@trpc/next": "^10.0.0",
-    "prisma": "^5.0.0",
-    "better-auth": "^1.0.0",
-    "openrouter-api": "^1.0.0"
+    "@prisma/client": "^6.18.0",
+    "next": "16.0.1",
+    "prisma": "^6.18.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "eslint": "^8.0.0",
-    "prettier": "^2.0.0",
-    "vitest": "^0.30.0",
-    "@trpc/test": "^10.0.0",
-    "playwright": "^1.0.0"
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1",
+    "typescript": "^5"
   }
 }

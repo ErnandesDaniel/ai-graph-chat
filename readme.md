@@ -1,4 +1,30 @@
 
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+Для работы с Prisma нужны пакеты:
+npm install prisma
+npm install @prisma/client
+
+Создание шаблона для схем Prisma:
+npx prisma init --output /prisma-entities
+
+Создание или обновление Prisma Client на основе схем данных можно сделать через команду:
+npx prisma generate
+
 Устанавливаем open spec cli-инструмент кодирования с ИИ
 
 npm install -g @fission-ai/openspec@latest
@@ -134,18 +160,6 @@ Better Auth: аутентификация через Google OAuth (исполь�
 OpenRouter API: для генерации ответов ИИ (токен передаётся через .env)
 PostgreSQL: Linux машина в интернете (для dev — Docker-контейнер)
 Linux машина в интернете (для dev — Docker-контейнер): для деплоя Next.js-приложения
-
-
-
-
-
-
-
-
-
-
-
-
 
 2. Create your first change proposal:
    I want to add [YOUR FEATURE HERE]. Please create an
