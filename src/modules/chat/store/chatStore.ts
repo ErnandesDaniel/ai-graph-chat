@@ -11,6 +11,7 @@ interface Message {
   content: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  selected?: boolean;
 }
 
 // Type for storing messages for all chats
@@ -37,8 +38,10 @@ interface ChatStore {
 
   addChat: () => void;
   selectChat: (chatId: string) => void;
+  clearMessageSelection: (chatId: string) => void;
   deleteChat: (chatId: string) => void;
   addMessage: (content: string) => Promise<void>;
+  selectMessage: (chatId: string, messageId: string) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -70,6 +73,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   selectChat: (chatId: string) => {
     set({ activeChatId: chatId });
+    // Clear selection when switching chats
+    get().clearMessageSelection(chatId);
   },
 
   deleteChat: (chatId: string) => {
@@ -149,5 +154,40 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         chatLoadingStates: { ...state.chatLoadingStates, [chatId]: false },
       }));
     }, 5000);
+  },
+
+  selectMessage: (chatId: string, messageId: string) => {
+    set((state) => {
+      const messages = state.chatMessages[chatId] || [];
+      const updatedMessages = messages.map(message =>
+        message.id === messageId
+          ? { ...message, selected: true }
+          : { ...message, selected: false }
+      );
+
+      return {
+        chatMessages: {
+          ...state.chatMessages,
+          [chatId]: updatedMessages,
+        },
+      };
+    });
+  },
+
+  clearMessageSelection: (chatId: string) => {
+    set((state) => {
+      const messages = state.chatMessages[chatId] || [];
+      const updatedMessages = messages.map(message => ({
+        ...message,
+        selected: false,
+      }));
+
+      return {
+        chatMessages: {
+          ...state.chatMessages,
+          [chatId]: updatedMessages,
+        },
+      };
+    });
   },
 }));

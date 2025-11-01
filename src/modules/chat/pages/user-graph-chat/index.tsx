@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -16,9 +16,10 @@ import {
 import '@xyflow/react/dist/style.css';
 import './index.scss';
 import { useChatStore } from '@/modules/chat/store/chatStore';
+import clsx from "clsx";
 
 const UserGraphChat: React.FC = () => {
-  const { activeChatId, chatMessages } = useChatStore();
+  const { activeChatId, chatMessages, clearMessageSelection } = useChatStore();
 
   const { nodes: messageNodes, edges: messageEdges } = useMemo(() => {
     if (!activeChatId) {
@@ -36,7 +37,10 @@ const UserGraphChat: React.FC = () => {
       data: {
         label: `${message.sender.toUpperCase()}: ${message.content.length > 50 ? message.content.substring(0, 50) + '...' : message.content}`
       },
-      className: message.sender === 'user' ? 'user-message-node' : 'ai-message-node',
+      className: clsx(
+        message.sender === 'user' ? 'user-message-node' : 'ai-message-node',
+        { 'selected-node': message.selected }
+      ),
     }));
 
     const edges: Edge[] = [];
@@ -60,10 +64,31 @@ const UserGraphChat: React.FC = () => {
     setEdges(messageEdges);
   }, [messageNodes, messageEdges, setNodes, setEdges]);
 
+  // Handle Escape key to clear selection
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && activeChatId) {
+        clearMessageSelection(activeChatId);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeChatId, clearMessageSelection]);
+
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
   );
+
+  const onNodeClick = useCallback((event: React.MouseEvent, node: any) => {
+    if (activeChatId) {
+      const { selectMessage } = useChatStore.getState();
+      selectMessage(activeChatId, node.id);
+    }
+  }, [activeChatId]);
 
   return (
     <div className="user-graph-chat">
@@ -73,6 +98,7 @@ const UserGraphChat: React.FC = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
         fitView
       >
         <Controls />

@@ -28,3 +28,11 @@
 .ai-message-node .react-flow__handle {
   background-color: #7b1fa2;
 }
+
+.selected-node {
+  border-width: 4px !important;
+  border-color: #28a745 !important;
+  box-shadow: 0 0 20px rgba(40, 167, 69, 0.8) !important;
+  transform: scale(1.05);
+  z-index: 10;
+}
