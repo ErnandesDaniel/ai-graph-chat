@@ -54,6 +54,12 @@ const UserGraphChat: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(messageNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(messageEdges);
 
+  // Update nodes and edges when activeChatId or chatMessages change
+  React.useEffect(() => {
+    setNodes(messageNodes);
+    setEdges(messageEdges);
+  }, [messageNodes, messageEdges, setNodes, setEdges]);
+
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],

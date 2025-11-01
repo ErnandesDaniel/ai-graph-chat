@@ -53,7 +53,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
             Create New Chat
           </button>
           <button className="toggle-mode-button" onClick={handleToggleChatMode}>
-            {pathname.includes('/graph') ? '💬' : '🌐'}
+            {pathname.includes('/graph') ? '💬 Linear' : '🔗 Graph'}
           </button>
         </div>
         <input
