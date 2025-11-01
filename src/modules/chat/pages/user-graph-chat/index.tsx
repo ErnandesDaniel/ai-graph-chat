@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -15,36 +15,44 @@ import {
 
 import '@xyflow/react/dist/style.css';
 import './index.scss';
-
-const initialNodes = [
-  {
-    id: '1',
-    type: 'default',
-    position: { x: 250, y: 25 },
-    data: { label: 'Hello World!' },
-  },
-  {
-    id: '2',
-    type: 'default',
-    position: { x: 100, y: 125 },
-    data: { label: 'This is a text block' },
-  },
-  {
-    id: '3',
-    type: 'default',
-    position: { x: 400, y: 125 },
-    data: { label: 'You can drag me around' },
-  },
-];
-
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2' },
-  { id: 'e1-3', source: '1', target: '3' },
-];
+import { useChatStore } from '@/modules/chat/store/chatStore';
 
 const UserGraphChat: React.FC = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const { activeChatId, chatMessages } = useChatStore();
+
+  const { nodes: messageNodes, edges: messageEdges } = useMemo(() => {
+    if (!activeChatId) {
+      return { nodes: [], edges: [] };
+    }
+
+    const messages = chatMessages[activeChatId] || [];
+    const nodes = messages.map((message, index) => ({
+      id: message.id,
+      type: 'default',
+      position: {
+        x: message.sender === 'user' ? 100 : 400,
+        y: index * 150 + 50
+      },
+      data: {
+        label: `${message.sender.toUpperCase()}: ${message.content.length > 50 ? message.content.substring(0, 50) + '...' : message.content}`
+      },
+      className: message.sender === 'user' ? 'user-message-node' : 'ai-message-node',
+    }));
+
+    const edges: Edge[] = [];
+    for (let i = 0; i < messages.length - 1; i++) {
+      edges.push({
+        id: `e${messages[i].id}-${messages[i + 1].id}`,
+        source: messages[i].id,
+        target: messages[i + 1].id,
+      });
+    }
+
+    return { nodes, edges };
+  }, [activeChatId, chatMessages]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(messageNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(messageEdges);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
