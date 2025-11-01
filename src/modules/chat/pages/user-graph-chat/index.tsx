@@ -43,6 +43,8 @@ const UserGraphChat: React.FC = () => {
       ),
     }));
 
+    const edges: Edge[] = [];
+
     // Add child chat nodes
     const childChats = chats.filter(chat => chat.parentMessageId && messages.some(msg => msg.id === chat.parentMessageId));
     childChats.forEach((childChat, childIndex) => {
@@ -62,7 +64,7 @@ const UserGraphChat: React.FC = () => {
         });
 
         // Connect the parent message to the child chat
-        messageEdges.push({
+        edges.push({
           id: `e${parentMessage.id}-chat-${childChat.id}`,
           source: parentMessage.id,
           target: `chat-${childChat.id}`,
@@ -70,7 +72,6 @@ const UserGraphChat: React.FC = () => {
       }
     });
 
-    const edges: Edge[] = [];
     for (let i = 0; i < messages.length - 1; i++) {
       edges.push({
         id: `e${messages[i].id}-${messages[i + 1].id}`,

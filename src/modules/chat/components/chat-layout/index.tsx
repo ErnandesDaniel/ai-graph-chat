@@ -42,16 +42,19 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
 
   const handleSendMessage = (content: string) => {
     if (selectedMessageForChild) {
-      // Check if selected message already has child chats
-      const hasChildChats = chats.some(chat => chat.parentMessageId === selectedMessageForChild);
-      if (hasChildChats) {
-        // Add message to current chat
-        addMessage(content);
-      } else {
+      // Check if selected message has child messages (responses)
+      const currentChatMessages = activeChatId ? chatMessages[activeChatId] || [] : [];
+      const messageIndex = currentChatMessages.findIndex(msg => msg.id === selectedMessageForChild);
+      const hasChildMessages = messageIndex >= 0 && messageIndex < currentChatMessages.length - 1;
+
+      if (hasChildMessages) {
         // Create child chat from selected message
         const newChatId = addChat(selectedMessageForChild);
         selectChat(newChatId);
         // Add the message to the new child chat
+        addMessage(content);
+      } else {
+        // Add message to current chat
         addMessage(content);
       }
     } else {
