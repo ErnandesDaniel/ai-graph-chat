@@ -1,0 +1,153 @@
+import { create } from 'zustand';
+
+interface Chat {
+  id: string;
+  name: string;
+  createdAt: Date;
+}
+
+interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+}
+
+// Type for storing messages for all chats
+// Key: chatId, Value: array of messages for that chat
+type ChatMessagesMap = Record<string, Message[]>;
+
+// Type for storing loading states for all chats
+// Key: chatId, Value: boolean indicating if chat is loading
+type ChatLoadingStates = Record<string, boolean>;
+
+interface ChatStore {
+  chats: Chat[];
+  activeChatId: string | null;
+  chatMessages: ChatMessagesMap;
+  chatLoadingStates: ChatLoadingStates;
+  filter: string;
+
+  // Actions
+  setChats: (chats: Chat[]) => void;
+  setActiveChatId: (id: string | null) => void;
+  setChatMessages: (messages: ChatMessagesMap) => void;
+  setChatLoadingStates: (states: ChatLoadingStates) => void;
+  setFilter: (filter: string) => void;
+
+  addChat: () => void;
+  selectChat: (chatId: string) => void;
+  deleteChat: (chatId: string) => void;
+  addMessage: (content: string) => Promise<void>;
+}
+
+export const useChatStore = create<ChatStore>((set, get) => ({
+  chats: [],
+  activeChatId: null,
+  chatMessages: {},
+  chatLoadingStates: {},
+  filter: '',
+
+  setChats: (chats) => set({ chats }),
+  setActiveChatId: (activeChatId) => set({ activeChatId }),
+  setChatMessages: (chatMessages) => set({ chatMessages }),
+  setChatLoadingStates: (chatLoadingStates) => set({ chatLoadingStates }),
+  setFilter: (filter) => set({ filter }),
+
+  addChat: () => {
+    const { chats } = get();
+    const newChat: Chat = {
+      id: Date.now().toString(),
+      name: `New Chat ${chats.length + 1}`,
+      createdAt: new Date(),
+    };
+    set((state) => ({
+      chats: [newChat, ...state.chats],
+      chatMessages: { ...state.chatMessages, [newChat.id]: [] },
+      activeChatId: state.activeChatId || newChat.id,
+    }));
+  },
+
+  selectChat: (chatId: string) => {
+    set({ activeChatId: chatId });
+  },
+
+  deleteChat: (chatId: string) => {
+    const { chats, chatMessages, chatLoadingStates, activeChatId } = get();
+    const updatedChats = chats.filter(chat => chat.id !== chatId);
+    const updatedMessages = { ...chatMessages };
+    delete updatedMessages[chatId];
+    const updatedLoadingStates = { ...chatLoadingStates };
+    delete updatedLoadingStates[chatId];
+
+    set({
+      chats: updatedChats,
+      chatMessages: updatedMessages,
+      chatLoadingStates: updatedLoadingStates,
+      activeChatId: activeChatId === chatId ? null : activeChatId,
+    });
+  },
+
+  addMessage: async (content: string) => {
+    const { chats, activeChatId, chatLoadingStates } = get();
+    let chatId = activeChatId;
+
+    // If no active chat, create a new one
+    if (!chatId) {
+      const newChat: Chat = {
+        id: Date.now().toString(),
+        name: `New Chat ${chats.length + 1}`,
+        createdAt: new Date(),
+      };
+      set((state) => ({
+        chats: [newChat, ...state.chats],
+        chatMessages: { ...state.chatMessages, [newChat.id]: [] },
+        chatLoadingStates: { ...state.chatLoadingStates, [newChat.id]: false },
+        activeChatId: newChat.id,
+      }));
+      chatId = newChat.id;
+    }
+
+    // Check if this specific chat is already loading
+    if (chatLoadingStates[chatId]) return;
+
+    // Set loading state for this specific chat
+    set((state) => ({
+      chatLoadingStates: { ...state.chatLoadingStates, [chatId]: true },
+    }));
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+
+    // Add user message to the current chat
+    set((state) => ({
+      chatMessages: {
+        ...state.chatMessages,
+        [chatId]: [...(state.chatMessages[chatId] || []), newMessage],
+      },
+    }));
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `AI response to: ${content}`,
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+
+      // Add AI response to the current chat
+      set((state) => ({
+        chatMessages: {
+          ...state.chatMessages,
+          [chatId]: [...(state.chatMessages[chatId] || []), aiMessage],
+        },
+        chatLoadingStates: { ...state.chatLoadingStates, [chatId]: false },
+      }));
+    }, 5000);
+  },
+}));
