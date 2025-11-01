@@ -40,12 +40,22 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
     // Keep the current route, just update the active chat
   };
 
+  const handleToggleChatMode = () => {
+    const isGraphMode = pathname.includes('/graph');
+    router.push(isGraphMode ? '/chat' : '/chat/graph');
+  };
+
   return (
     <div className="chat-layout">
       <div className="chat-list-layout">
-        <button className="create-button" onClick={addChat}>
-          Create New Chat
-        </button>
+        <div className="header-buttons">
+          <button className="create-button" onClick={addChat}>
+            Create New Chat
+          </button>
+          <button className="toggle-mode-button" onClick={handleToggleChatMode}>
+            {pathname.includes('/graph') ? '💬' : '🌐'}
+          </button>
+        </div>
         <input
           type="text"
           placeholder="Filter chats"
