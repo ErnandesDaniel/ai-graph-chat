@@ -19,12 +19,20 @@ interface Message {
   timestamp: Date;
 }
 
+// Type for storing messages for all chats
+// Key: chatId, Value: array of messages for that chat
+type ChatMessagesMap = Record<string, Message[]>;
+
+// Type for storing loading states for all chats
+// Key: chatId, Value: boolean indicating if chat is loading
+type ChatLoadingStates = Record<string, boolean>;
+
 const UserLinearChat: React.FC = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<Record<string, Message[]>>({});
+  const [chatMessages, setChatMessages] = useState<ChatMessagesMap>({});
+  const [chatLoadingStates, setChatLoadingStates] = useState<ChatLoadingStates>({});
   const [filter, setFilter] = useState<string>('');
-  const [isSending, setIsSending] = useState<boolean>(false);
 
   const addChat = () => {
     const newChat: Chat = {
@@ -45,20 +53,27 @@ const UserLinearChat: React.FC = () => {
 
   const deleteChat = (chatId: string) => {
     setChats(prev => prev.filter(chat => chat.id !== chatId));
+
+    // Remove messages for the deleted chat
     setChatMessages(prev => {
-      const newMessages = { ...prev };
-      delete newMessages[chatId];
-      return newMessages;
+      const updatedMessages: ChatMessagesMap = { ...prev };
+      delete updatedMessages[chatId];
+      return updatedMessages;
     });
+
+    // Remove loading state for the deleted chat
+    setChatLoadingStates(prev => {
+      const updatedLoadingStates: ChatLoadingStates = { ...prev };
+      delete updatedLoadingStates[chatId];
+      return updatedLoadingStates;
+    });
+
     if (activeChatId === chatId) {
       setActiveChatId(null);
-      setIsSending(false); // Reset sending state when active chat is deleted
     }
   };
 
   const addMessage = async (content: string) => {
-    if (isSending) return;
-
     let chatId = activeChatId;
 
     // If no active chat, create a new one
@@ -70,11 +85,16 @@ const UserLinearChat: React.FC = () => {
       };
       setChats([newChat, ...chats]);
       setChatMessages(prev => ({ ...prev, [newChat.id]: [] }));
+      setChatLoadingStates(prev => ({ ...prev, [newChat.id]: false }));
       chatId = newChat.id;
       setActiveChatId(chatId);
     }
 
-    setIsSending(true);
+    // Check if this specific chat is already loading
+    if (chatLoadingStates[chatId]) return;
+
+    // Set loading state for this specific chat
+    setChatLoadingStates(prev => ({ ...prev, [chatId]: true }));
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -83,6 +103,7 @@ const UserLinearChat: React.FC = () => {
       timestamp: new Date(),
     };
 
+    // Add user message to the current chat
     setChatMessages(prev => ({
       ...prev,
       [chatId]: [...(prev[chatId] || []), newMessage],
@@ -97,12 +118,14 @@ const UserLinearChat: React.FC = () => {
         timestamp: new Date(),
       };
 
+      // Add AI response to the current chat
       setChatMessages(prev => ({
         ...prev,
         [chatId]: [...(prev[chatId] || []), aiMessage],
       }));
 
-      setIsSending(false);
+      // Reset loading state for this specific chat
+      setChatLoadingStates(prev => ({ ...prev, [chatId]: false }));
     }, 5000);
   };
 
@@ -110,7 +133,11 @@ const UserLinearChat: React.FC = () => {
     .filter(chat => chat.name.toLowerCase().includes(filter.toLowerCase()))
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const activeMessages = activeChatId ? chatMessages[activeChatId] || [] : [];
+  // Get messages for the currently active chat
+  const activeMessages: Message[] = activeChatId ? chatMessages[activeChatId] || [] : [];
+
+  // Get loading state for the currently active chat
+  const isActiveChatLoading: boolean = activeChatId ? chatLoadingStates[activeChatId] || false : false;
 
   return (
     <div className="user-linear-chat">
@@ -122,10 +149,11 @@ const UserLinearChat: React.FC = () => {
         onAddChat={addChat}
         onSelectChat={selectChat}
         onDeleteChat={deleteChat}
+        chatLoadingStates={chatLoadingStates}
       />
       <div className="chat-content">
         <MessageList messages={activeMessages} />
-        <MessageInput onSendMessage={addMessage} disabled={false} sending={isSending} />
+        <MessageInput onSendMessage={addMessage} disabled={false} sending={isActiveChatLoading} />
       </div>
     </div>
   );
