@@ -15,6 +15,7 @@ interface ChatListLayoutProps {
   onFilterChange: (filter: string) => void;
   onAddChat: () => void;
   onSelectChat: (chatId: string) => void;
+  onDeleteChat: (chatId: string) => void;
 }
 
 const ChatListLayout: React.FC<ChatListLayoutProps> = ({
@@ -24,6 +25,7 @@ const ChatListLayout: React.FC<ChatListLayoutProps> = ({
   onFilterChange,
   onAddChat,
   onSelectChat,
+  onDeleteChat,
 }) => {
   return (
     <div className="chat-list-layout">
@@ -44,7 +46,16 @@ const ChatListLayout: React.FC<ChatListLayoutProps> = ({
             className={clsx('chat-item', { active: activeChatId === chat.id })}
             onClick={() => onSelectChat(chat.id)}
           >
-            {chat.name}
+            <span>{chat.name}</span>
+            <button
+              className="delete-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteChat(chat.id);
+              }}
+            >
+              ×
+            </button>
           </div>
         ))}
       </div>

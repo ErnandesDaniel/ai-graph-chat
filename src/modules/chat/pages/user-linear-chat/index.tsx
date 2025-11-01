@@ -24,6 +24,7 @@ const UserLinearChat: React.FC = () => {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Record<string, Message[]>>({});
   const [filter, setFilter] = useState<string>('');
+  const [isSending, setIsSending] = useState<boolean>(false);
 
   const addChat = () => {
     const newChat: Chat = {
@@ -42,8 +43,38 @@ const UserLinearChat: React.FC = () => {
     setActiveChatId(chatId);
   };
 
-  const addMessage = (content: string) => {
-    if (!activeChatId) return;
+  const deleteChat = (chatId: string) => {
+    setChats(prev => prev.filter(chat => chat.id !== chatId));
+    setChatMessages(prev => {
+      const newMessages = { ...prev };
+      delete newMessages[chatId];
+      return newMessages;
+    });
+    if (activeChatId === chatId) {
+      setActiveChatId(null);
+      setIsSending(false); // Reset sending state when active chat is deleted
+    }
+  };
+
+  const addMessage = async (content: string) => {
+    if (isSending) return;
+
+    let chatId = activeChatId;
+
+    // If no active chat, create a new one
+    if (!chatId) {
+      const newChat: Chat = {
+        id: Date.now().toString(),
+        name: `New Chat ${chats.length + 1}`,
+        createdAt: new Date(),
+      };
+      setChats([newChat, ...chats]);
+      setChatMessages(prev => ({ ...prev, [newChat.id]: [] }));
+      chatId = newChat.id;
+      setActiveChatId(chatId);
+    }
+
+    setIsSending(true);
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -54,7 +85,7 @@ const UserLinearChat: React.FC = () => {
 
     setChatMessages(prev => ({
       ...prev,
-      [activeChatId]: [...(prev[activeChatId] || []), newMessage],
+      [chatId]: [...(prev[chatId] || []), newMessage],
     }));
 
     // Simulate AI response
@@ -68,9 +99,11 @@ const UserLinearChat: React.FC = () => {
 
       setChatMessages(prev => ({
         ...prev,
-        [activeChatId]: [...(prev[activeChatId] || []), aiMessage],
+        [chatId]: [...(prev[chatId] || []), aiMessage],
       }));
-    }, 1000);
+
+      setIsSending(false);
+    }, 5000);
   };
 
   const filteredChats = chats
@@ -88,10 +121,11 @@ const UserLinearChat: React.FC = () => {
         onFilterChange={setFilter}
         onAddChat={addChat}
         onSelectChat={selectChat}
+        onDeleteChat={deleteChat}
       />
       <div className="chat-content">
         <MessageList messages={activeMessages} />
-        <MessageInput onSendMessage={addMessage} disabled={!activeChatId} />
+        <MessageInput onSendMessage={addMessage} disabled={false} sending={isSending} />
       </div>
     </div>
   );
