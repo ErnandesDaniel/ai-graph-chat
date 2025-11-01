@@ -32,10 +32,7 @@ const UserLinearChat: React.FC = () => {
 
   return (
     <div className="user-linear-chat">
-      <div className="chat-content">
-        <MessageList messages={activeMessages} />
-        <MessageInput onSendMessage={addMessage} disabled={false} sending={isActiveChatLoading} />
-      </div>
+      <MessageList messages={activeMessages} />
     </div>
   );
 };

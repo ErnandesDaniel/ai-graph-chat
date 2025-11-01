@@ -3,14 +3,9 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import MessageInput from '@/modules/chat/pages/user-linear-chat/components/message-input';
 import { useChatStore } from '@/modules/chat/store/chatStore';
 import './index.scss';
-
-interface Chat {
-  id: string;
-  name: string;
-  createdAt: Date;
-}
 
 interface ChatLayoutProps {
   children: React.ReactNode;
@@ -25,11 +20,16 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
     activeChatId,
     filter,
     chatLoadingStates,
+    selectedMessageId,
+    chatMessages,
     setFilter,
     addChat,
     selectChat,
     deleteChat,
+    addMessage,
   } = useChatStore();
+
+  const selectedMessageForChild = selectedMessageId;
 
   const filteredChats = chats
     .filter(chat => chat.name.toLowerCase().includes(filter.toLowerCase()))
@@ -40,6 +40,27 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
     // Keep the current route, just update the active chat
   };
 
+  const handleSendMessage = (content: string) => {
+    if (selectedMessageForChild) {
+      // Check if selected message already has child chats
+      const hasChildChats = chats.some(chat => chat.parentId === activeChatId);
+      if (hasChildChats) {
+        // Create child chat from selected message
+        const newChatId = addChat(selectedMessageForChild);
+        selectChat(newChatId);
+      } else {
+        // Add message to current chat
+        addMessage(content);
+      }
+    } else {
+      // Regular message sending
+      addMessage(content);
+    }
+  };
+
+  // Get loading state for the currently active chat
+  const isActiveChatLoading: boolean = activeChatId ? chatLoadingStates[activeChatId] || false : false;
+
   const handleToggleChatMode = () => {
     const isGraphMode = pathname.includes('/graph');
     router.push(isGraphMode ? '/chat' : '/chat/graph');
@@ -49,7 +70,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
     <div className="chat-layout">
       <div className="chat-list-layout">
         <div className="header-buttons">
-          <button className="create-button" onClick={addChat}>
+          <button className="create-button" onClick={() => addChat()}>
             Create New Chat
           </button>
           <button className="toggle-mode-button" onClick={handleToggleChatMode}>
@@ -94,6 +115,13 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
       </div>
       <div className="chat-content">
         {children}
+        <MessageInput
+          onSendMessage={handleSendMessage}
+          disabled={false}
+          sending={isActiveChatLoading}
+          placeholder={selectedMessageForChild ? "Type to create child chat..." : "Type your message..."}
+          disableSend={pathname.includes('/graph') && !selectedMessageForChild && (activeChatId ? (chatMessages[activeChatId] || []).length > 0 : false)}
+        />
       </div>
     </div>
   );

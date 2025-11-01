@@ -19,7 +19,7 @@ import { useChatStore } from '@/modules/chat/store/chatStore';
 import clsx from "clsx";
 
 const UserGraphChat: React.FC = () => {
-  const { activeChatId, chatMessages, clearMessageSelection } = useChatStore();
+  const { activeChatId, chatMessages, clearMessageSelection, chats } = useChatStore();
 
   const { nodes: messageNodes, edges: messageEdges } = useMemo(() => {
     if (!activeChatId) {
@@ -43,6 +43,32 @@ const UserGraphChat: React.FC = () => {
       ),
     }));
 
+    // Add child chat nodes
+    const childChats = chats.filter(chat => chat.parentId === activeChatId);
+    childChats.forEach((childChat, childIndex) => {
+      nodes.push({
+        id: `chat-${childChat.id}`,
+        type: 'default',
+        position: {
+          x: 600 + (childIndex % 2) * 200,
+          y: 100 + Math.floor(childIndex / 2) * 150
+        },
+        data: {
+          label: `Child Chat: ${childChat.name}`
+        },
+        className: 'child-chat-node',
+      });
+
+      // Connect the last message to the child chat
+      if (messages.length > 0) {
+        messageEdges.push({
+          id: `e${messages[messages.length - 1].id}-chat-${childChat.id}`,
+          source: messages[messages.length - 1].id,
+          target: `chat-${childChat.id}`,
+        });
+      }
+    });
+
     const edges: Edge[] = [];
     for (let i = 0; i < messages.length - 1; i++) {
       edges.push({
@@ -53,16 +79,22 @@ const UserGraphChat: React.FC = () => {
     }
 
     return { nodes, edges };
-  }, [activeChatId, chatMessages]);
+  }, [activeChatId, chatMessages, chats]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(messageNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(messageEdges);
+  const [viewportKey, setViewportKey] = React.useState(0);
 
   // Update nodes and edges when activeChatId or chatMessages change
   React.useEffect(() => {
     setNodes(messageNodes);
     setEdges(messageEdges);
   }, [messageNodes, messageEdges, setNodes, setEdges]);
+
+  // Reset viewport when switching chats
+  React.useEffect(() => {
+    setViewportKey(prev => prev + 1);
+  }, [activeChatId]);
 
   // Handle Escape key to clear selection
   useEffect(() => {
@@ -83,16 +115,18 @@ const UserGraphChat: React.FC = () => {
     [setEdges],
   );
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: any) => {
-    if (activeChatId) {
+  const onNodeClick = useCallback((event: React.MouseEvent, node: { id: string }) => {
+    if (activeChatId && !node.id.startsWith('chat-')) {
       const { selectMessage } = useChatStore.getState();
       selectMessage(activeChatId, node.id);
     }
   }, [activeChatId]);
 
+
   return (
     <div className="user-graph-chat">
       <ReactFlow
+        key={viewportKey}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -100,6 +134,8 @@ const UserGraphChat: React.FC = () => {
         onConnect={onConnect}
         onNodeClick={onNodeClick}
         fitView
+        fitViewOptions={{ maxZoom: 1.2 }}
+        defaultViewport={{ x: 0, y: 0, zoom: 1.0 }}
       >
         <Controls />
         <MiniMap />

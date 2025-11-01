@@ -4,6 +4,7 @@ interface Chat {
   id: string;
   name: string;
   createdAt: Date;
+  parentId?: string;
 }
 
 interface Message {
@@ -28,6 +29,7 @@ interface ChatStore {
   chatMessages: ChatMessagesMap;
   chatLoadingStates: ChatLoadingStates;
   filter: string;
+  selectedMessageId: string | null;
 
   // Actions
   setChats: (chats: Chat[]) => void;
@@ -35,8 +37,9 @@ interface ChatStore {
   setChatMessages: (messages: ChatMessagesMap) => void;
   setChatLoadingStates: (states: ChatLoadingStates) => void;
   setFilter: (filter: string) => void;
+  setSelectedMessageId: (id: string | null) => void;
 
-  addChat: () => void;
+  addChat: (parentId?: string) => string;
   selectChat: (chatId: string) => void;
   clearMessageSelection: (chatId: string) => void;
   deleteChat: (chatId: string) => void;
@@ -50,29 +53,33 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   chatMessages: {},
   chatLoadingStates: {},
   filter: '',
+  selectedMessageId: null,
 
   setChats: (chats) => set({ chats }),
   setActiveChatId: (activeChatId) => set({ activeChatId }),
   setChatMessages: (chatMessages) => set({ chatMessages }),
   setChatLoadingStates: (chatLoadingStates) => set({ chatLoadingStates }),
   setFilter: (filter) => set({ filter }),
+  setSelectedMessageId: (selectedMessageId) => set({ selectedMessageId }),
 
-  addChat: () => {
+  addChat: (parentId?: string) => {
     const { chats } = get();
     const newChat: Chat = {
       id: Date.now().toString(),
-      name: `New Chat ${chats.length + 1}`,
+      name:`New Chat ${chats.length + 1}`,
       createdAt: new Date(),
+      parentId,
     };
     set((state) => ({
       chats: [newChat, ...state.chats],
       chatMessages: { ...state.chatMessages, [newChat.id]: [] },
       activeChatId: state.activeChatId || newChat.id,
     }));
+    return newChat.id;
   },
 
   selectChat: (chatId: string) => {
-    set({ activeChatId: chatId });
+    set({ activeChatId: chatId, selectedMessageId: null });
     // Clear selection when switching chats
     get().clearMessageSelection(chatId);
   },
@@ -153,7 +160,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         },
         chatLoadingStates: { ...state.chatLoadingStates, [chatId]: false },
       }));
-    }, 5000);
+    }, 0);
   },
 
   selectMessage: (chatId: string, messageId: string) => {
@@ -170,6 +177,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           ...state.chatMessages,
           [chatId]: updatedMessages,
         },
+        selectedMessageId: messageId,
       };
     });
   },
@@ -187,6 +195,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           ...state.chatMessages,
           [chatId]: updatedMessages,
         },
+        selectedMessageId: null,
       };
     });
   },

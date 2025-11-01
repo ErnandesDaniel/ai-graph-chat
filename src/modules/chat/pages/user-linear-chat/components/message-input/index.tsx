@@ -9,9 +9,11 @@ interface MessageInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   sending?: boolean;
+  placeholder?: string;
+  disableSend?: boolean;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, disabled = false, sending = false }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, disabled = false, sending = false, placeholder = "Type your message...", disableSend = false }) => {
   const [message, setMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,14 +38,14 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, disabled = f
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type your message..."
+        placeholder={placeholder}
         disabled={disabled}
         rows={3}
       />
       <button
         type="submit"
         className={clsx('message-input__button', { disabled })}
-        disabled={!message.trim() || disabled || sending}
+        disabled={!message.trim() || disabled || sending || disableSend}
       >
         {sending ? 'Sending...' : 'Send'}
       </button>
