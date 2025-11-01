@@ -11,8 +11,7 @@ AI Chat Graph is an application that allows users to communicate with AI through
 - **Backend**: tRPC (v10+)
 - **Database**: PostgreSQL through Prisma ORM
 - **Authentication**: Better Auth with Google OAuth
-- **Hosting**: Vercel (recommended)
-
+- 
 ## Project Conventions
 
 ### Code Style
