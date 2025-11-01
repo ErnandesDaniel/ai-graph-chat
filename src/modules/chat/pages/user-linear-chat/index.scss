@@ -1,0 +1,12 @@
+.user-linear-chat {
+  display: flex;
+  height: 100vh;
+  background-color: #fff;
+}
+
+.chat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
