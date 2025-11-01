@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react';
-import ChatListLayout from '@/modules/chat/components/chat-list-layout';
 import MessageList from '@/modules/chat/pages/user-linear-chat/components/message-list';
 import MessageInput from '@/modules/chat/pages/user-linear-chat/components/message-input';
 import { useChatStore } from '@/modules/chat/store/chatStore';
@@ -33,16 +32,6 @@ const UserLinearChat: React.FC = () => {
 
   return (
     <div className="user-linear-chat">
-      <ChatListLayout
-        chats={filteredChats}
-        activeChatId={activeChatId}
-        filter={filter}
-        onFilterChange={setFilter}
-        onAddChat={addChat}
-        onSelectChat={selectChat}
-        onDeleteChat={deleteChat}
-        chatLoadingStates={chatLoadingStates}
-      />
       <div className="chat-content">
         <MessageList messages={activeMessages} />
         <MessageInput onSendMessage={addMessage} disabled={false} sending={isActiveChatLoading} />

@@ -1,60 +1,89 @@
 'use client';
 
 import React from 'react';
-import { Button } from 'antd';
-import { SwapOutlined } from '@ant-design/icons';
-import ChatListLayout from '@/modules/chat/components/chat-list-layout';
-import UserLinearChat from '@/modules/chat/pages/user-linear-chat';
-import UserGraphChat from '@/modules/chat/pages/user-graph-chat';
-import { useChatStore } from '@/modules/chat/stores/chatStore';
+import { useRouter, usePathname } from 'next/navigation';
+import clsx from 'clsx';
+import { useChatStore } from '@/modules/chat/store/chatStore';
 import './index.scss';
+
+interface Chat {
+  id: string;
+  name: string;
+  createdAt: Date;
+}
 
 interface ChatLayoutProps {
   children: React.ReactNode;
 }
 
 const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const {
-    filteredChats,
+    chats,
     activeChatId,
     filter,
     chatLoadingStates,
-    chatMode,
     setFilter,
     addChat,
     selectChat,
     deleteChat,
-    toggleChatMode,
   } = useChatStore();
+
+  const filteredChats = chats
+    .filter(chat => chat.name.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  const handleSelectChat = (chatId: string) => {
+    selectChat(chatId);
+    // Keep the current route, just update the active chat
+  };
 
   return (
     <div className="chat-layout">
-      <ChatListLayout
-        chats={filteredChats}
-        activeChatId={activeChatId}
-        filter={filter}
-        onFilterChange={setFilter}
-        onAddChat={addChat}
-        onSelectChat={selectChat}
-        onDeleteChat={deleteChat}
-        chatLoadingStates={chatLoadingStates}
-        headerExtra={
-          <Button
-            type="text"
-            icon={<SwapOutlined />}
-            onClick={toggleChatMode}
-            title={`Switch to ${chatMode === 'linear' ? 'Graph' : 'Linear'} Chat`}
-          >
-            {chatMode === 'linear' ? 'Graph' : 'Linear'}
-          </Button>
-        }
-      />
+      <div className="chat-list-layout">
+        <button className="create-button" onClick={addChat}>
+          Create New Chat
+        </button>
+        <input
+          type="text"
+          placeholder="Filter chats"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="filter-input"
+        />
+        <div className="chat-list">
+          {filteredChats.map(chat => {
+            const isLoading = chatLoadingStates[chat.id] || false;
+            return (
+              <div
+                key={chat.id}
+                className={clsx('chat-item', {
+                  active: activeChatId === chat.id,
+                  loading: isLoading,
+                  'active-loading': activeChatId === chat.id && isLoading
+                })}
+                onClick={() => handleSelectChat(chat.id)}
+              >
+                <span>{chat.name}</span>
+                {isLoading && <div className="loading-indicator">⟳</div>}
+                <button
+                  className="delete-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteChat(chat.id);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
       <div className="chat-content">
-        {chatMode === 'linear' ? (
-          <UserLinearChat />
-        ) : (
-          <UserGraphChat />
-        )}
+        {children}
       </div>
     </div>
   );
