@@ -4,7 +4,7 @@ interface Chat {
   id: string;
   name: string;
   createdAt: Date;
-  parentId?: string;
+  parentMessageId?: string;
 }
 
 interface Message {
@@ -39,7 +39,7 @@ interface ChatStore {
   setFilter: (filter: string) => void;
   setSelectedMessageId: (id: string | null) => void;
 
-  addChat: (parentId?: string) => string;
+  addChat: (parentMessageId?: string) => string;
   selectChat: (chatId: string) => void;
   clearMessageSelection: (chatId: string) => void;
   deleteChat: (chatId: string) => void;
@@ -62,13 +62,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setFilter: (filter) => set({ filter }),
   setSelectedMessageId: (selectedMessageId) => set({ selectedMessageId }),
 
-  addChat: (parentId?: string) => {
+  addChat: (parentMessageId?: string) => {
     const { chats } = get();
     const newChat: Chat = {
       id: Date.now().toString(),
       name:`New Chat ${chats.length + 1}`,
       createdAt: new Date(),
-      parentId,
+      parentMessageId,
     };
     set((state) => ({
       chats: [newChat, ...state.chats],

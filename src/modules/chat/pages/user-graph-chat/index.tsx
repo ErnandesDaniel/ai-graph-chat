@@ -44,26 +44,27 @@ const UserGraphChat: React.FC = () => {
     }));
 
     // Add child chat nodes
-    const childChats = chats.filter(chat => chat.parentId === activeChatId);
+    const childChats = chats.filter(chat => chat.parentMessageId && messages.some(msg => msg.id === chat.parentMessageId));
     childChats.forEach((childChat, childIndex) => {
-      nodes.push({
-        id: `chat-${childChat.id}`,
-        type: 'default',
-        position: {
-          x: 600 + (childIndex % 2) * 200,
-          y: 100 + Math.floor(childIndex / 2) * 150
-        },
-        data: {
-          label: `Child Chat: ${childChat.name}`
-        },
-        className: 'child-chat-node',
-      });
+      const parentMessage = messages.find(msg => msg.id === childChat.parentMessageId);
+      if (parentMessage) {
+        nodes.push({
+          id: `chat-${childChat.id}`,
+          type: 'default',
+          position: {
+            x: parentMessage.sender === 'user' ? 600 : 800,
+            y: messages.indexOf(parentMessage) * 150 + 50 + (childIndex + 1) * 100
+          },
+          data: {
+            label: `Child Chat: ${childChat.name}`
+          },
+          className: 'child-chat-node',
+        });
 
-      // Connect the last message to the child chat
-      if (messages.length > 0) {
+        // Connect the parent message to the child chat
         messageEdges.push({
-          id: `e${messages[messages.length - 1].id}-chat-${childChat.id}`,
-          source: messages[messages.length - 1].id,
+          id: `e${parentMessage.id}-chat-${childChat.id}`,
+          source: parentMessage.id,
           target: `chat-${childChat.id}`,
         });
       }
